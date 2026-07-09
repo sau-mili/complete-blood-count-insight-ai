@@ -1,0 +1,146 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  PATIENT
+  CLINICIAN
+  ADMIN
+}
+
+enum BiologicalSex {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum PanelType {
+  CBC         // Complete Blood Count
+  METABOLIC   // Future Expansion
+  LIPID       // Future Expansion
+  THYROID     // Future Expansion
+  VITAMIN     // Future Expansion
+}
+
+enum BiomarkerStatus {
+  CRITICALLY_LOW
+  LOW
+  SLIGHTLY_LOW
+  NORMAL
+  SLIGHTLY_HIGH
+  HIGH
+  CRITICALLY_HIGH
+}
+
+model User {
+  id            String          @id @default(uuid())
+  email         String          @unique
+  passwordHash  String
+  name          String
+  role          UserRole        @default(PATIENT)
+  dateOfBirth   DateTime
+  biologicalSex BiologicalSex
+  height        Float?          // Centimeters
+  weight        Float?          // Kilograms
+  bloodGroup    String?
+  phoneNumber   String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  sessions      Session[]
+  reports       Report[]
+  auditLogs     AuditLog[]
+
+  @@index([email])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  token        String   @unique
+  expiresAt    DateTime
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Report {
+  id             String          @id @default(uuid())
+  userId         String
+  labName        String?
+  reportDate     DateTime        @default(now())
+  uploadedAt     DateTime        @default(now())
+  panelType      PanelType       @default(CBC)
+  overallStatus  BiomarkerStatus @default(NORMAL)
+  abnormalCount  Int             @default(0)
+  isDeleted      Boolean         @default(false)
+  
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileDetails    ReportFile?
+  biomarkers     BiomarkerRecord[]
+  aiAnalysis     AIAnalysis?
+
+  @@index([userId, reportDate])
+}
+
+model ReportFile {
+  id            String   @id @default(uuid())
+  reportId      String   @unique
+  storageKey    String   // Vercel Blob identifier
+  fileUrl       String
+  fileName      String
+  fileSize      Int
+  mimeType      String
+  checksum      String?  
+  createdAt     DateTime @default(now())
+  
+  report        Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+}
+
+model BiomarkerRecord {
+  id              String          @id @default(uuid())
+  reportId        String
+  key             String          // Standard index (e.g., "HGB", "WBC")
+  displayName     String          
+  value           Float
+  unit            String
+  referenceLow    Float?
+  referenceHigh   Float?
+  status          BiomarkerStatus @default(NORMAL)
+  confidenceScore Float          
+
+  report          Report          @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@unique([reportId, key])
+  @@index([reportId])
+}
+
+model AIAnalysis {
+  id                 String   @id @default(uuid())
+  reportId           String   @unique
+  summary            String   @db.Text
+  cautions           Json     // Array of { parameter: string, risk: string, message: string }
+  suggestedFollowUp  Json     // Array of recommended next steps or specialists
+  patientExplanation String   @db.Text
+  createdAt          DateTime @default(now())
+
+  report             Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String
+  ipAddress String
+  timestamp DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
