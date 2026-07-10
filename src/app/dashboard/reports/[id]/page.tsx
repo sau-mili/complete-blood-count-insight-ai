@@ -161,7 +161,7 @@ export default function ReportDetailPage({ params }: ReportDetailPageProps) {
             <Sparkles className="h-7 w-7 animate-spin" />
           </div>
           <div className="space-y-1 max-w-md mx-auto">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Gemini AI Analyzing Report...</h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">CBC Insights AI Analyzing Report...</h3>
             <p className="text-sm text-slate-600 dark:text-slate-400">
               Extracting tabular values, checking medical reference boundaries, and writing plain-English clinical explanations.
             </p>
