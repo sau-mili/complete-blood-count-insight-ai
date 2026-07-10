@@ -29,7 +29,7 @@ export function AIAnalysisCard({ analysis, overallStatus }: AIAnalysisCardProps)
           </div>
           <div className="space-y-2">
             <span className="px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-white/20 text-white backdrop-blur-sm">
-              Gemini AI Clinical Interpretation
+              CBC Insights AI Clinical Interpretation
             </span>
             <h3 className="text-xl font-extrabold">Report Overview</h3>
             <p className="text-rose-100 text-sm md:text-base leading-relaxed font-medium">
